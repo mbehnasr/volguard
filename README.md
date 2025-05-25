@@ -1,104 +1,150 @@
-# 🐳 docker-volume-backup
+# 🐳 Docker Volume Backup & Restore Tool
 
-## Requirements
+A simple and powerful Bash-based utility to **backup and restore Docker volumes and bind mounts**, supporting Docker Compose setups.
 
-To use this script, ensure the following tools are installed on your host system:
+---
 
-- `docker`: To manage containers and volumes.
-- `jq`: To parse JSON configuration files.
-- `rsync`: For syncing backups to a remote server.
-- `sshpass` *(optional)*: If you are not using SSH key authentication, `sshpass` is used to pass the password non-interactively.
-- `bash`: The script is written in Bash and must be run in a compatible shell.
+## ✨ Features
 
-Make sure your system has proper permissions to access Docker and SSH.
+- 🔄 **Daily backups** of Docker volumes and bind mounts
+- 💥 **Restore** from backups easily using an interactive CLI
+- 🕰️ **Retention policy** (configurable)
+- 🛠️ **Supports Docker Compose**
+- 📦 Supports **named volumes** and **bind mounts**
+- ☁️ Optional **remote sync** via SSH
+- 📃 Generates a `manifest.json` per backup
+- 🧩 Customizable via `config.json` and `.env`
 
+---
 
-A flexible, automated backup and restore solution for Docker **volumes** and **bind mounts**. It supports daily backups, retention policies, and optional syncing to a remote server — using either SSH key or password-based login.
+## 🧰 Requirements
 
-## 📦 Features
+- Docker 🐳
+- Bash (tested on v5+)
+- `jq`, `tar`, `gzip`, `base64`, `cut`, `find`, `date`
+- Optional: `sshpass` (if using remote sync with password)
 
-- Backup all Docker volumes, including named volumes and bind mounts
-- Organize backups by container name and image
-- Automated retention: delete backups older than 7 days
-- Optional syncing to a remote backup server using `rsync`
-- Uses `.env` and `config.json` for configuration
-- SSH key detection or fallback to password using `sshpass`
+---
 
-## 📁 Directory Structure
+## 🛠️ Configuration
 
-```
-docker-volume-backup/
-├── backup.sh
-├── restore.sh
-├── .env
-├── config.json
-├── backups/
-└── README.md
-```
-
-## ⚙️ Configuration
-
-### `.env`
-
-Stores credentials and remote host information:
-
-```env
-REMOTE_USER=username
-REMOTE_HOST=remote.server.com
-REMOTE_PASSWORD=your_password_here
-REMOTE_BACKUP_DIR=/home/username/remote_backups
-```
-
-> 💡 If using SSH keys, `REMOTE_PASSWORD` is not needed.
-
-### `config.json`
+### 1️⃣ `config.json`
 
 ```json
 {
-  "backup_time": "01:00",
-  "backup_root": "/home/youruser/docker-volume-backup/backups",
+  "backup_root": "/var/log/docker-volume-backup/backups",
   "retention_days": 7,
-  "sync_enabled": true
+  "remote_sync": false
 }
 ```
 
-## 🛠️ Scripts
+- `backup_root`: Directory where all backups will be stored.
+- `retention_days`: How many days to keep backups.
+- `remote_sync`: Set `true` to enable syncing to remote server.
 
-### `backup.sh`
+---
 
-- Reads `.env` and `config.json`
-- Detects and backs up all containers' volumes/bind mounts
-- Names backups using: `volumeName_containerName_imageName_date.tar.gz`
-- Syncs to remote server using SSH or `sshpass` if password provided
+### 2️⃣ `.env` (for remote sync)
 
-### `restore.sh`
-
-- Restores backup into Docker volume
-- Run with:
-  ```bash
-  ./restore.sh
-  ```
-
-## 🔐 SSH Key or Password
-
-- If `~/.ssh/id_rsa` exists, will use it for remote sync
-- Else uses `sshpass` with `REMOTE_PASSWORD` from `.env`
-- If `sshpass` not installed, you will be prompted
-
-## 📅 Cron Job (Optional)
-
-To schedule daily backups:
-
-```bash
-0 1 * * * /bin/bash /home/youruser/docker-volume-backup/backup.sh >> /var/log/docker_backup.log 2>&1
+```ini
+REMOTE_USER=youruser
+REMOTE_HOST=backup.example.com
+REMOTE_PATH=/home/youruser/backups
+REMOTE_PASSWORD=yourpassword  # Optional, safer if using SSH key instead
 ```
 
-## 🔄 Restore Instructions
+Used when `remote_sync` is enabled in `config.json`.
 
-1. Recreate Docker volumes (if not existing)
-2. Run `restore.sh` with backup archive and volume name
-3. Start container with restored volumes
+---
 
-## 🙌 Credits
+## 📦 Backup Script
 
-Built with ❤️ by [Mohammadmahdi Behnasr](https://github.com/mbehnasr)
+Run the backup script manually or set it in a cron job.
+
+```bash
+./backup.sh
+```
+
+It will:
+
+1. Identify all running containers.
+2. Detect all mounted volumes (named or bind).
+3. Create compressed `.tar.gz` files.
+4. Generate a `manifest.json` for mapping.
+5. Enforce retention policy.
+6. Optionally sync to remote server.
+
+---
+
+## 🔁 Restore Script
+
+Run to restore from a specific backup timestamp.
+
+```bash
+./restore.sh               # Interactive mode
+./restore.sh 2025-05-25_23-41-29   # Restore specific timestamp
+```
+
+The script will:
+
+- Parse the `manifest.json`
+- Recreate volumes if missing
+- Restore volume or bind data to correct paths
+
+---
+
+## 📂 Backup Structure
+
+```
+backups/
+└── 2025-05-25_23-41-29/
+    ├── manifest.json
+    ├── container-name
+        └── VOL___volume-name___container-name___timestamp.tar.gz
+```
+
+---
+
+## 🧪 Example Cron Job
+
+Edit crontab with `crontab -e`:
+
+```bash
+0 1 * * * /path/to/backup.sh >> /var/log/docker-backup.log 2>&1
+```
+
+---
+
+## 📥 Restore from Remote
+
+Ensure SSH keys or `.env` with password is set. Place the selected backup timestamp folder inside your `backup_root`, then run:
+
+```bash
+./restore.sh
+```
+
+---
+
+## 🛡️ Notes
+
+- For security, SSH keys are preferred over passwords.
+- Bind mount paths will be decoded and restored to their original locations.
+- Make sure you have permissions to write to those locations.
+
+---
+
+## 🤝 Contribution
+
+PRs and suggestions are welcome. Fork and start hacking! 🔧
+
+---
+
+## 📜 License
+
+MIT © 2025
+
+---
+
+## 📞 Contact
+
+For support or contributions, open an issue or create a PR.

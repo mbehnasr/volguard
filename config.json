@@ -1,0 +1,5 @@
+{
+  "backup_root": "/var/log/docker-volume-backup/backups",
+  "retention_days": 7,
+  "remote_sync": false
+}

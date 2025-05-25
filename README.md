@@ -76,7 +76,7 @@ REMOTE_BACKUP_DIR=/home/username/remote_backups
 - Restores backup into Docker volume
 - Run with:
   ```bash
-  ./restore.sh <backup_file.tar.gz> <volume_name>
+  ./restore.sh
   ```
 
 ## 🔐 SSH Key or Password
@@ -101,4 +101,4 @@ To schedule daily backups:
 
 ## 🙌 Credits
 
-Built with ❤️ by [Your Name](https://github.com/yourusername)
+Built with ❤️ by [Your Name](https://github.com/mbehnasr)

@@ -101,4 +101,4 @@ To schedule daily backups:
 
 ## 🙌 Credits
 
-Built with ❤️ by [Your Name](https://github.com/mbehnasr)
+Built with ❤️ by [Mohammadmahdi Behnasr](https://github.com/mbehnasr)

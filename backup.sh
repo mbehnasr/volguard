@@ -25,7 +25,7 @@ mkdir -p "$BACKUP_DIR"
 echo "📦 Starting backup at $TIMESTAMP"
 manifest_items=()
 
-containers=$(docker ps --format '{{.Names}}')
+containers=$(docker ps -a --format '{{.Names}}')
 
 if [[ -z "$containers" ]]; then
   echo "⚠️ No running containers found, nothing to backup."
